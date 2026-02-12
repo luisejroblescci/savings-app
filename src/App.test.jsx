@@ -28,9 +28,9 @@ describe('Spending Tracker App', () => {
 
     it('has default form values', () => {
       render(<App />)
-      
+
       expect(screen.getByDisplayValue('General')).toBeInTheDocument()
-      expect(screen.getByDisplayValue('MXN')).toBeInTheDocument()
+      expect(screen.getByTestId('currency-toggle')).toHaveTextContent('MXN')
       expect(screen.getByPlaceholderText('0.00')).toHaveValue('')
       expect(screen.getByPlaceholderText('Add a note about this spending...')).toHaveValue('')
     })
@@ -165,9 +165,10 @@ describe('Spending Tracker App', () => {
       await user.type(amountInput, '50.75')
       await user.type(noteInput, 'Coffee and lunch')
       await user.click(addButton)
-      
+
       // Check spending was added
-      expect(screen.getByText('Personal')).toBeInTheDocument()
+      const spendingItem = screen.getByTestId('spending-item')
+      expect(spendingItem).toHaveTextContent('Personal')
       expect(screen.getByText('$50.75 MXN')).toBeInTheDocument()
       expect(screen.getByText('"Coffee and lunch"')).toBeInTheDocument()
     })
@@ -307,11 +308,11 @@ describe('Spending Tracker App', () => {
       await user.click(addButton)
       
       const spendingItem = screen.getByTestId('spending-item')
-      
+
       // Check all elements are present
-      expect(spendingItem).toContainElement(screen.getByText('House'))
-      expect(spendingItem).toContainElement(screen.getByText('$150.25 MXN'))
-      expect(spendingItem).toContainElement(screen.getByText('"Groceries and utilities"'))
+      expect(spendingItem).toHaveTextContent('House')
+      expect(spendingItem).toHaveTextContent('$150.25 MXN')
+      expect(spendingItem).toHaveTextContent('"Groceries and utilities"')
     })
 
     it('does not show note section when note is empty', async () => {
@@ -325,9 +326,9 @@ describe('Spending Tracker App', () => {
       await user.click(addButton)
       
       const spendingItem = screen.getByTestId('spending-item')
-      
-      expect(spendingItem).toContainElement(screen.getByText('General'))
-      expect(spendingItem).toContainElement(screen.getByText('$25.00 MXN'))
+
+      expect(spendingItem).toHaveTextContent('General')
+      expect(spendingItem).toHaveTextContent('$25.00 MXN')
       expect(spendingItem.querySelector('.spending-note')).not.toBeInTheDocument()
     })
   })

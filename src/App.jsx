@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 const CATEGORIES = ['General', 'Personal', 'Auto', 'House'];
 const CURRENCIES = ['MXN', 'USD'];
@@ -12,16 +12,22 @@ function App() {
     currency: 'MXN',
     note: ''
   });
+  const lastValidAmountRef = useRef('');
+  const decimalBlockedRef = useRef(false);
 
   const handleInputChange = (field, value) => {
     if (field === 'amount') {
-      // Only allow numbers and decimal point
-      const numericValue = value.replace(/[^0-9.]/g, '');
-      // Prevent multiple decimal points
-      const parts = numericValue.split('.');
-      if (parts.length > 2) {
+      // Check the raw value for multiple decimal points BEFORE cleaning
+      const rawDecimalCount = (value.match(/\./g) || []).length;
+      if (rawDecimalCount > 1) {
+        // Multiple decimals in raw input - reject this change entirely
         return;
       }
+
+      // Only allow numbers and one decimal point
+      const numericValue = value.replace(/[^0-9.]/g, '');
+
+      lastValidAmountRef.current = numericValue;
       setFormData(prev => ({ ...prev, amount: numericValue }));
     } else if (field === 'note') {
       // Limit to 140 characters
@@ -120,6 +126,27 @@ function App() {
               placeholder="0.00"
               value={formData.amount}
               onChange={(e) => handleInputChange('amount', e.target.value)}
+              onKeyDown={(e) => {
+                // Handle backspace/delete - clear the block flag
+                if (e.key === 'Backspace' || e.key === 'Delete') {
+                  decimalBlockedRef.current = false;
+                  return;
+                }
+
+                // If we previously blocked a decimal, block all further character input
+                if (decimalBlockedRef.current && e.key.length === 1 &&
+                    e.key !== 'Tab' && !e.metaKey && !e.ctrlKey) {
+                  e.preventDefault();
+                  return;
+                }
+
+                // Prevent second decimal point
+                if (e.key === '.' && formData.amount.includes('.')) {
+                  e.preventDefault();
+                  decimalBlockedRef.current = true;
+                  return;
+                }
+              }}
               style={{ paddingLeft: '20px' }}
               data-testid="amount-input"
             />
